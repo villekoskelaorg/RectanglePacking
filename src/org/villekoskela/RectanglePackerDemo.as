@@ -12,6 +12,18 @@
  * The package structure of the source code must remain unchanged.
  * Mentioning the author in the binary distributions is highly appreciated.
  *
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. *
+ *
  */
 package org.villekoskela
 {
@@ -35,7 +47,7 @@ package org.villekoskela
     [SWF(width="480", height="480", frameRate="60", backgroundColor="#FFFFFF")]
     public class RectanglePackerDemo extends Sprite
     {
-        private static const WIDTH:int = 480
+        private static const WIDTH:int = 480;
         private static const HEIGHT:int = 480;
         private static const Y_MARGIN:int = 40;
         private static const BOX_MARGIN:int = 15;
@@ -64,7 +76,7 @@ package org.villekoskela
             mCopyRight.x = BOX_MARGIN;
             mCopyRight.y = BOX_MARGIN / 3;
             mCopyRight.width = 300;
-            mCopyRight.text = "Rectangle Packer (c) villekoskela.org"
+            mCopyRight.text = "Rectangle Packer (c) villekoskela.org";
             addChild(mCopyRight);
 
             mText.x = WIDTH - 200;
@@ -92,7 +104,7 @@ package org.villekoskela
                 mRectangles.push(new Rectangle(0, 0, width, height));
             }
 
-            for (var j:int = 10; i < RECTANGLE_COUNT; i++)
+            for (var j:int = 10; j < RECTANGLE_COUNT; j++)
             {
                 width = 6 + Math.floor(Math.random() * 8) * 2;
                 height = 6 + Math.floor(Math.random() * 8) * 2;
