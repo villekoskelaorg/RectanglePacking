@@ -1,5 +1,5 @@
 /**
- * Rectangle Packer v1.0.1
+ * Rectangle Packer v1.0.2
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -36,7 +36,7 @@ package org.villekoskela.utils
      */
     public class RectanglePacker
     {
-        public static const VERSION:String = "1.0";
+        public static const VERSION:String = "1.0.2";
         private var mWidth:int = 0;
         private var mHeight:int = 0;
 
@@ -44,6 +44,7 @@ package org.villekoskela.utils
         private var mFreeAreas:Vector.<Rectangle> = new Vector.<Rectangle>();
 
         private var mOutsideRectangle:Rectangle;
+        private var mRectangleStack:Vector.<Rectangle> = new Vector.<Rectangle>();
 
         public function get rectangleCount():int { return mInsertedRectangles.length; }
 
@@ -54,10 +55,30 @@ package org.villekoskela.utils
          */
         public function RectanglePacker(width:int, height:int)
         {
+            mOutsideRectangle = new Rectangle(width + 1, height + 1, 0, 0);
+            reset(width, height);
+        }
+
+        /**
+         * Resets the rectangle packer with given dimensions
+         * @param width
+         * @param height
+         */
+        public function reset(width:int, height:int):void
+        {
+            while (mInsertedRectangles.length)
+            {
+                freeRectangle(mInsertedRectangles.pop());
+            }
+
+            while (mFreeAreas.length)
+            {
+                freeRectangle(mFreeAreas.pop());
+            }
+
             mWidth = width;
             mHeight = height;
-            mOutsideRectangle = new Rectangle(mWidth + 1, mHeight + 1, 0, 0);
-            mFreeAreas.push(new Rectangle(0, 0, mWidth, mHeight));
+            mFreeAreas.push(allocateRectangle(0, 0, mWidth, mHeight));
         }
 
         /**
@@ -91,7 +112,7 @@ package org.villekoskela.utils
             }
 
             var freeArea:Rectangle = mFreeAreas[index];
-            var target:Rectangle = new Rectangle(freeArea.left, freeArea.top, rectangle.width, rectangle.height);
+            var target:Rectangle = allocateRectangle(freeArea.left, freeArea.top, rectangle.width, rectangle.height);
 
             // Get the new free areas, these are parts of the old ones intersected by the target
             var newFreeAreas:Vector.<Rectangle> = generateNewSubAreas(target, mFreeAreas);
@@ -120,7 +141,7 @@ package org.villekoskela.utils
 
             if (result == null)
             {
-                result = new Rectangle();
+                result = allocateRectangle(0, 0, 0, 0);
             }
 
             result.copyFrom(areas[0]);
@@ -176,6 +197,7 @@ package org.villekoskela.utils
                             area.x + area.width >= filtered.x + filtered.width &&
                             area.y + area.height >= filtered.y + filtered.height)
                         {
+                            freeRectangle(filtered);
                             filteredAreas.splice(j, 1);
                             if (filteredAreas.length == 0)
                             {
@@ -205,6 +227,7 @@ package org.villekoskela.utils
                         area.y + area.height >= filtered.y + filtered.height &&
                         (area.width > filtered.width || area.height > filtered.height))
                     {
+                        freeRectangle(filtered);
                         areas.splice(i, 1);
                         break;
                     }
@@ -229,6 +252,7 @@ package org.villekoskela.utils
                       target.y >= area.y + area.height || target.y + target.height <= area.y))
                 {
                     generateDividedAreas(target, area, results);
+                    freeRectangle(area);
                     areas.splice(i, 1);
                 }
             }
@@ -247,22 +271,22 @@ package org.villekoskela.utils
         {
             if (divider.right < area.right)
             {
-                results.push(new Rectangle(divider.right, area.y, area.right - divider.right, area.height));
+                results.push(allocateRectangle(divider.right, area.y, area.right - divider.right, area.height));
             }
 
             if (divider.x > area.x)
             {
-                results.push(new Rectangle(area.x, area.y, divider.x - area.x, area.height));
+                results.push(allocateRectangle(area.x, area.y, divider.x - area.x, area.height));
             }
 
             if (divider.bottom < area.bottom)
             {
-                results.push(new Rectangle(area.x, divider.bottom, area.width, area.bottom - divider.bottom));
+                results.push(allocateRectangle(area.x, divider.bottom, area.width, area.bottom - divider.bottom));
             }
 
             if (divider.y > area.y)
             {
-                results.push(new Rectangle(area.x, area.y, area.width, divider.y - area.y));
+                results.push(allocateRectangle(area.x, area.y, area.width, divider.y - area.y));
             }
         }
 
@@ -290,6 +314,38 @@ package org.villekoskela.utils
             }
 
             return index;
+        }
+
+        /**
+         * Allocates new rectangle. If one available in stack uses that, otherwise new.
+         * @param x
+         * @param y
+         * @param width
+         * @param height
+         * @return
+         */
+        private function allocateRectangle(x:Number, y:Number, width:Number, height:Number):Rectangle
+        {
+            if (mRectangleStack.length > 0)
+            {
+                var rectangle:Rectangle = mRectangleStack.pop();
+                rectangle.x = x;
+                rectangle.y = y;
+                rectangle.width = width;
+                rectangle.height = height;
+                return rectangle;
+            }
+
+            return new Rectangle(x, y, width, height);
+        }
+
+        /**
+         * Pushes the freed rectangle to rectangle stack. Make sure not to push same rectangle twice!
+         * @param rectangle
+         */
+        private function freeRectangle(rectangle:Rectangle):void
+        {
+            mRectangleStack.push(rectangle);
         }
     }
 }

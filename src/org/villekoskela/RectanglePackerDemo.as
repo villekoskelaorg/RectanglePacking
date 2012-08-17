@@ -142,10 +142,22 @@ package org.villekoskela
         private function updateRectangles():void
         {
             var start:int = getTimer();
-            mPacker = new RectanglePacker(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight);
+            var indexes:Vector.<int> = new Vector.<int>();
+            if (mPacker == null)
+            {
+                mPacker = new RectanglePacker(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight);
+            }
+            else
+            {
+                mPacker.reset(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight)
+            }
+
             for (var i:int = 0; i < RECTANGLE_COUNT; i++)
             {
-                mPacker.insertRectangle(mRectangles[i]);
+                if (mPacker.insertRectangle(mRectangles[i]))
+                {
+                    indexes.push(i);
+                }
             }
             var end:int = getTimer();
 
@@ -160,7 +172,9 @@ package org.villekoskela
                 {
                     rect = mPacker.getRectangle(j, rect);
                     mBitmapData.fillRect(new Rectangle(rect.left, rect.top, rect.width, rect.height), 0xFF000000);
-                    mBitmapData.fillRect(new Rectangle(rect.left + 1, rect.top + 1, rect.width - 2, rect.height - 2), 0xFF171703 + (((18 * ((j+4) % 13)) << 16) + ((31 * ((j*3) % 8)) << 8) + 63 * (((j+1)*3) % 5)));
+                    var index:int = indexes[j];
+                    var color:uint = 0xFF171703 + (((18 * ((index + 4) % 13)) << 16) + ((31 * ((index * 3) % 8)) << 8) + 63 * (((index + 1) * 3) % 5));
+                    mBitmapData.fillRect(new Rectangle(rect.left + 1, rect.top + 1, rect.width - 2, rect.height - 2), color);
                 }
             }
         }
