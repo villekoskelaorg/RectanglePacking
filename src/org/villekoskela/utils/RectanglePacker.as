@@ -1,5 +1,5 @@
 /**
- * Rectangle Packer v1.0.2
+ * Rectangle Packer v1.1.0
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -36,15 +36,17 @@ package org.villekoskela.utils
      */
     public class RectanglePacker
     {
-        public static const VERSION:String = "1.0.2";
+        public static const VERSION:String = "1.1.0";
         private var mWidth:int = 0;
         private var mHeight:int = 0;
 
-        private var mInsertedRectangles:Vector.<Rectangle> = new Vector.<Rectangle>();
-        private var mFreeAreas:Vector.<Rectangle> = new Vector.<Rectangle>();
+        private var mInsertedRectangles:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
+        private var mFreeAreas:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
+        private var mNewFreeAreas:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
 
-        private var mOutsideRectangle:Rectangle;
-        private var mRectangleStack:Vector.<Rectangle> = new Vector.<Rectangle>();
+        private var mOutsideRectangle:IntegerRectangle;
+
+        private var mRectangleStack:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
 
         public function get rectangleCount():int { return mInsertedRectangles.length; }
 
@@ -55,7 +57,7 @@ package org.villekoskela.utils
          */
         public function RectanglePacker(width:int, height:int)
         {
-            mOutsideRectangle = new Rectangle(width + 1, height + 1, 0, 0);
+            mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
             reset(width, height);
         }
 
@@ -89,38 +91,42 @@ package org.villekoskela.utils
          */
         public function getRectangle(index:int, rectangle:Rectangle):Rectangle
         {
+            var inserted:IntegerRectangle = mInsertedRectangles[index];
             if (rectangle)
             {
-                rectangle.copyFrom(mInsertedRectangles[index]);
+                rectangle.x = inserted.x;
+                rectangle.y = inserted.y;
+                rectangle.width = inserted.width;
+                rectangle.height = inserted.height;
                 return rectangle;
             }
 
-            return mInsertedRectangles[index].clone();
+            return new Rectangle(inserted.x, inserted.y, inserted.width, inserted.height);
         }
 
         /**
          * Tries to insert new rectangle into the packer
-         * @param rectangle
+         * @width the width of inserted rectangle
+         * @height the height of inserted rectangle
          * @return true if inserted successfully
          */
-        public function insertRectangle(rectangle:Rectangle):Boolean
+        public function insertRectangle(width:int, height:int):Boolean
         {
-            var index:int = getFreeAreaIndex(rectangle);
+            var index:int = getFreeAreaIndex(width, height);
             if (index < 0)
             {
                 return false;
             }
 
-            var freeArea:Rectangle = mFreeAreas[index];
-            var target:Rectangle = allocateRectangle(freeArea.left, freeArea.top, rectangle.width, rectangle.height);
+            var freeArea:IntegerRectangle = mFreeAreas[index];
+            var target:IntegerRectangle = allocateRectangle(freeArea.x, freeArea.y, width, height);
 
-            // Get the new free areas, these are parts of the old ones intersected by the target
-            var newFreeAreas:Vector.<Rectangle> = generateNewSubAreas(target, mFreeAreas);
-            filterSubAreas(newFreeAreas, mFreeAreas);
+            // Generate the new free areas, these are parts of the old ones intersected or touched by the target
+            generateNewFreeAreas(target, mFreeAreas, mNewFreeAreas);
 
-            for (var i:int = newFreeAreas.length - 1; i >= 0; i--)
+            while (mNewFreeAreas.length > 0)
             {
-                mFreeAreas.push(newFreeAreas[i]);
+                mFreeAreas.push(mNewFreeAreas.pop());
             }
 
             mInsertedRectangles.push(target);
@@ -128,108 +134,31 @@ package org.villekoskela.utils
         }
 
         /**
-         * Returns the bounding rectangle for the given list of rectangles
-         * @param areas the list of rectangles
-         * @return the bounding rectangle or null if empty list given
-         */
-        private function getBoundingRectangle(areas:Vector.<Rectangle>, result:Rectangle = null):Rectangle
-        {
-            if (areas.length == 0)
-            {
-                return null;
-            }
-
-            if (result == null)
-            {
-                result = allocateRectangle(0, 0, 0, 0);
-            }
-
-            result.copyFrom(areas[0]);
-            for (var i:int = areas.length - 1; i >= 0; i--)
-            {
-                var area:Rectangle = areas[i];
-                if (area.x < result.x)
-                {
-                    result.x = area.x;
-                }
-                if (area.y < result.y)
-                {
-                    result.y = area.y;
-                }
-                if (area.x + area.width > result.x + result.width)
-                {
-                    result.width = area.x + area.width - area.x;
-                }
-                if (area.y + area.height > result.y + result.height)
-                {
-                    result.height = area.y + area.height - area.y;
-                }
-            }
-
-            return result;
-        }
-
-        /**
-         * Removes rectangles from the filteredAreas that are sub rectangles of any rectangle in areas.
-         * @param filteredAreas rectangles to be filtered
-         * @param areas rectangles against which the filtering is performed, must not be equal to filteredAreas
-         */
-        private function filterSubAreas(filteredAreas:Vector.<Rectangle>, areas:Vector.<Rectangle>):void
-        {
-            if (filteredAreas.length == 0)
-            {
-                return;
-            }
-
-            var bounding:Rectangle = getBoundingRectangle(filteredAreas);
-
-            for (var i:int = areas.length - 1; i >= 0; i--)
-            {
-                // First check that the bounding box of the filtered rectangles even intersects this area
-                var area:Rectangle = areas[i];
-                if (!(bounding.x >= area.x + area.width || bounding.x + bounding.width <= area.x ||
-                      bounding.y >= area.y + area.height || bounding.y + bounding.height <= area.y))
-                {
-                    for (var j:int = filteredAreas.length - 1; j >= 0; j--)
-                    {
-                        var filtered:Rectangle = filteredAreas[j];
-                        if (area.x <= filtered.x && area.y <= filtered.y &&
-                            area.x + area.width >= filtered.x + filtered.width &&
-                            area.y + area.height >= filtered.y + filtered.height)
-                        {
-                            freeRectangle(filtered);
-                            filteredAreas.splice(j, 1);
-                            if (filteredAreas.length == 0)
-                            {
-                                return;
-                            }
-                            bounding = getBoundingRectangle(filteredAreas, bounding);
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
          * Removes rectangles from the filteredAreas that are sub rectangles of any rectangle in areas.
          * @param areas rectangles from which the filtering is performed
          */
-        private function filterSelfSubAreas(areas:Vector.<Rectangle>):void
+        private function filterSelfSubAreas(areas:Vector.<IntegerRectangle>):void
         {
             for (var i:int = areas.length - 1; i >= 0; i--)
             {
-                var filtered:Rectangle = areas[i];
+                var filtered:IntegerRectangle = areas[i];
                 for (var j:int = areas.length - 1; j >= 0; j--)
                 {
-                    var area:Rectangle = areas[j];
-                    if (area.x <= filtered.x && area.y <= filtered.y &&
-                        area.x + area.width >= filtered.x + filtered.width &&
-                        area.y + area.height >= filtered.y + filtered.height &&
-                        (area.width > filtered.width || area.height > filtered.height))
+                    if (i != j)
                     {
-                        freeRectangle(filtered);
-                        areas.splice(i, 1);
-                        break;
+                        var area:IntegerRectangle = areas[j];
+                        if (filtered.x >= area.x && filtered.y >= area.y &&
+                            filtered.right <= area.right && filtered.bottom <= area.bottom)
+                        {
+                            freeRectangle(filtered);
+                            var topOfStack:IntegerRectangle = areas.pop();
+                            if (i <areas.length)
+                            {
+                                // Move the one on the top to the freed position
+                                areas[i] = topOfStack;
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -242,23 +171,30 @@ package org.villekoskela.utils
          * @param areas the areas to be divided
          * @return list of new areas
          */
-        private function generateNewSubAreas(target:Rectangle, areas:Vector.<Rectangle>):Vector.<Rectangle>
+        private function generateNewFreeAreas(target:IntegerRectangle, areas:Vector.<IntegerRectangle>, results:Vector.<IntegerRectangle>):void
         {
-            var results:Vector.<Rectangle> = new Vector.<Rectangle>();
+            // Increase dimensions by one to get the areas on right / bottom this rectangle touches
+            const x:int = target.x;
+            const y:int = target.y;
+            const right:int = target.right + 1;
+            const bottom:int = target.bottom + 1;
+
             for (var i:int = areas.length - 1; i >= 0; i--)
             {
-                var area:Rectangle = areas[i];
-                if (!(target.x >= area.x + area.width || target.x + target.width <= area.x ||
-                      target.y >= area.y + area.height || target.y + target.height <= area.y))
+                const area:IntegerRectangle = areas[i];
+                if (!(x >= area.right || right <= area.x || y >= area.bottom || bottom <= area.y))
                 {
                     generateDividedAreas(target, area, results);
-                    freeRectangle(area);
-                    areas.splice(i, 1);
+                    var topOfStack:IntegerRectangle = areas.pop();
+                    if (i <areas.length)
+                    {
+                        // Move the one on the top to the freed position
+                        areas[i] = topOfStack;
+                    }
                 }
             }
 
             filterSelfSubAreas(results);
-            return results;
         }
 
         /**
@@ -267,48 +203,70 @@ package org.villekoskela.utils
          * @param area rectangle to be divided into sub areas around the divider
          * @param results vector for the new sub areas around the divider
          */
-        private function generateDividedAreas(divider:Rectangle, area:Rectangle, results:Vector.<Rectangle>):void
+        private function generateDividedAreas(divider:IntegerRectangle, area:IntegerRectangle, results:Vector.<IntegerRectangle>):void
         {
-            if (divider.right < area.right)
+            var count:int = 0;
+            const rightDelta:int = area.right - divider.right;
+            if (rightDelta > 0)
             {
-                results.push(allocateRectangle(divider.right, area.y, area.right - divider.right, area.height));
+                results.push(allocateRectangle(divider.right, area.y, rightDelta, area.height));
+                count++;
             }
 
-            if (divider.x > area.x)
+            const xDelta:int = divider.x - area.x;
+            if (xDelta > 0)
             {
-                results.push(allocateRectangle(area.x, area.y, divider.x - area.x, area.height));
+                results.push(allocateRectangle(area.x, area.y, xDelta, area.height));
+                count++;
             }
 
-            if (divider.bottom < area.bottom)
+            const bottomDelta:int = area.bottom - divider.bottom;
+            if (bottomDelta > 0)
             {
-                results.push(allocateRectangle(area.x, divider.bottom, area.width, area.bottom - divider.bottom));
+                results.push(allocateRectangle(area.x, divider.bottom, area.width, bottomDelta));
+                count++;
             }
 
-            if (divider.y > area.y)
+            const yDelta:int = divider.y - area.y;
+            if (yDelta > 0)
             {
-                results.push(allocateRectangle(area.x, area.y, area.width, divider.y - area.y));
+                results.push(allocateRectangle(area.x, area.y, area.width, yDelta));
+                count++;
+            }
+
+            if (count == 0 && (divider.width < area.width || divider.height < area.height))
+            {
+                // Only touching the area, store the area itself
+                results.push(area);
+            }
+            else
+            {
+                freeRectangle(area);
             }
         }
 
         /**
          * Gets the index of the best free area for the given rectangle
-         * @param rectangle
+         * @width the width of inserted rectangle
+         * @height the height of inserted rectangle
          * @return index of the best free area or -1 if no suitable free area available
          */
-        private function getFreeAreaIndex(rectangle:Rectangle):int
+        private function getFreeAreaIndex(width:int, height:int):int
         {
-            var best:Rectangle = mOutsideRectangle;
+            var best:IntegerRectangle = mOutsideRectangle;
             var index:int = -1;
 
-            for (var i:int = mFreeAreas.length - 1; i >= 0; i--)
+            const count:int = mFreeAreas.length;
+            for (var i:int = 0; i < count; i++)
             {
-                var free:Rectangle = mFreeAreas[i];
-                if (rectangle.width <= free.width && rectangle.height <= free.height)
+                const free:IntegerRectangle = mFreeAreas[i];
+                if (free.x < best.x && width <= free.width && height <= free.height)
                 {
-                    if (free.x < best.x || (free.x == best.x && free.y < best.y))
+                    index = i;
+                    best = free;
+                    if (best.x == 0)
                     {
-                        index = i;
-                        best = free;
+                        break;
                     }
                 }
             }
@@ -324,26 +282,29 @@ package org.villekoskela.utils
          * @param height
          * @return
          */
-        private function allocateRectangle(x:Number, y:Number, width:Number, height:Number):Rectangle
+        private function allocateRectangle(x:int, y:int, width:int, height:int):IntegerRectangle
         {
             if (mRectangleStack.length > 0)
             {
-                var rectangle:Rectangle = mRectangleStack.pop();
+                var rectangle:IntegerRectangle = mRectangleStack.pop();
                 rectangle.x = x;
                 rectangle.y = y;
                 rectangle.width = width;
                 rectangle.height = height;
+                rectangle.right = x + width;
+                rectangle.bottom = y + height;
+
                 return rectangle;
             }
 
-            return new Rectangle(x, y, width, height);
+            return new IntegerRectangle(x, y, width, height);
         }
 
         /**
          * Pushes the freed rectangle to rectangle stack. Make sure not to push same rectangle twice!
          * @param rectangle
          */
-        private function freeRectangle(rectangle:Rectangle):void
+        private function freeRectangle(rectangle:IntegerRectangle):void
         {
             mRectangleStack.push(rectangle);
         }

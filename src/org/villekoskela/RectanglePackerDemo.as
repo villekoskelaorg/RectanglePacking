@@ -154,7 +154,7 @@ package org.villekoskela
 
             for (var i:int = 0; i < RECTANGLE_COUNT; i++)
             {
-                if (mPacker.insertRectangle(mRectangles[i]))
+                if (mPacker.insertRectangle(mRectangles[i].width, mRectangles[i].height))
                 {
                     indexes.push(i);
                 }
@@ -171,10 +171,10 @@ package org.villekoskela
                 for (var j:int = 0; j < mPacker.rectangleCount; j++)
                 {
                     rect = mPacker.getRectangle(j, rect);
-                    mBitmapData.fillRect(new Rectangle(rect.left, rect.top, rect.width, rect.height), 0xFF000000);
+                    mBitmapData.fillRect(new Rectangle(rect.x, rect.y, rect.width, rect.height), 0xFF000000);
                     var index:int = indexes[j];
                     var color:uint = 0xFF171703 + (((18 * ((index + 4) % 13)) << 16) + ((31 * ((index * 3) % 8)) << 8) + 63 * (((index + 1) * 3) % 5));
-                    mBitmapData.fillRect(new Rectangle(rect.left + 1, rect.top + 1, rect.width - 2, rect.height - 2), color);
+                    mBitmapData.fillRect(new Rectangle(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2), color);
                 }
             }
         }
