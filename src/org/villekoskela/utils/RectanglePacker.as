@@ -1,5 +1,5 @@
 /**
- * Rectangle Packer v1.1.0
+ * Rectangle Packer v1.1.1
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -36,7 +36,7 @@ package org.villekoskela.utils
      */
     public class RectanglePacker
     {
-        public static const VERSION:String = "1.1.0";
+        public static const VERSION:String = "1.1.1";
         private var mWidth:int = 0;
         private var mHeight:int = 0;
 
@@ -80,7 +80,7 @@ package org.villekoskela.utils
 
             mWidth = width;
             mHeight = height;
-            mFreeAreas.push(allocateRectangle(0, 0, mWidth, mHeight));
+            mFreeAreas[0] = allocateRectangle(0, 0, mWidth, mHeight);
         }
 
         /**
@@ -126,10 +126,10 @@ package org.villekoskela.utils
 
             while (mNewFreeAreas.length > 0)
             {
-                mFreeAreas.push(mNewFreeAreas.pop());
+                mFreeAreas[mFreeAreas.length] = mNewFreeAreas.pop();
             }
 
-            mInsertedRectangles.push(target);
+            mInsertedRectangles[mInsertedRectangles.length] = target;
             return true;
         }
 
@@ -209,35 +209,35 @@ package org.villekoskela.utils
             const rightDelta:int = area.right - divider.right;
             if (rightDelta > 0)
             {
-                results.push(allocateRectangle(divider.right, area.y, rightDelta, area.height));
+                results[results.length] = allocateRectangle(divider.right, area.y, rightDelta, area.height);
                 count++;
             }
 
-            const xDelta:int = divider.x - area.x;
-            if (xDelta > 0)
+            const leftDelta:int = divider.x - area.x;
+            if (leftDelta > 0)
             {
-                results.push(allocateRectangle(area.x, area.y, xDelta, area.height));
+                results[results.length] = allocateRectangle(area.x, area.y, leftDelta, area.height);
                 count++;
             }
 
             const bottomDelta:int = area.bottom - divider.bottom;
             if (bottomDelta > 0)
             {
-                results.push(allocateRectangle(area.x, divider.bottom, area.width, bottomDelta));
+                results[results.length] = allocateRectangle(area.x, divider.bottom, area.width, bottomDelta);
                 count++;
             }
 
-            const yDelta:int = divider.y - area.y;
-            if (yDelta > 0)
+            const topDelta:int = divider.y - area.y;
+            if (topDelta > 0)
             {
-                results.push(allocateRectangle(area.x, area.y, area.width, yDelta));
+                results[results.length] = allocateRectangle(area.x, area.y, area.width, topDelta);
                 count++;
             }
 
             if (count == 0 && (divider.width < area.width || divider.height < area.height))
             {
                 // Only touching the area, store the area itself
-                results.push(area);
+                results[results.length] = area;
             }
             else
             {
@@ -257,17 +257,17 @@ package org.villekoskela.utils
             var index:int = -1;
 
             const count:int = mFreeAreas.length;
-            for (var i:int = 0; i < count; i++)
+            for (var i:int = count - 1; i >= 0; i--)
             {
                 const free:IntegerRectangle = mFreeAreas[i];
                 if (free.x < best.x && width <= free.width && height <= free.height)
                 {
                     index = i;
-                    best = free;
-                    if (best.x == 0)
+                    if (width == free.width || height == free.height)
                     {
                         break;
                     }
+                    best = free;
                 }
             }
 
@@ -306,7 +306,7 @@ package org.villekoskela.utils
          */
         private function freeRectangle(rectangle:IntegerRectangle):void
         {
-            mRectangleStack.push(rectangle);
+            mRectangleStack[mRectangleStack.length] = rectangle;
         }
     }
 }
