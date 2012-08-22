@@ -53,6 +53,7 @@ package org.villekoskela
         private static const BOX_MARGIN:int = 15;
 
         private static const RECTANGLE_COUNT:int = 500;
+        private static const SIZE_MULTIPLIER:Number = 2;
 
         private var mBitmapData:BitmapData = new BitmapData(WIDTH, HEIGHT, true, 0xFFFFFFFF);
         private var mCopyRight:TextField = new TextField();
@@ -99,15 +100,15 @@ package org.villekoskela
             var height:int;
             for (var i:int = 0; i < 10; i++)
             {
-                width = 40 + Math.floor(Math.random() * 8) * 4;
-                height = 40 + Math.floor(Math.random() * 8) * 4;
+                width = 20 * SIZE_MULTIPLIER + Math.floor(Math.random() * 8) * SIZE_MULTIPLIER * SIZE_MULTIPLIER;
+                height = 20 * SIZE_MULTIPLIER + Math.floor(Math.random() * 8) * SIZE_MULTIPLIER * SIZE_MULTIPLIER;
                 mRectangles.push(new Rectangle(0, 0, width, height));
             }
 
             for (var j:int = 10; j < RECTANGLE_COUNT; j++)
             {
-                width = 6 + Math.floor(Math.random() * 8) * 2;
-                height = 6 + Math.floor(Math.random() * 8) * 2;
+                width = 3 * SIZE_MULTIPLIER + Math.floor(Math.random() * 8) * SIZE_MULTIPLIER;
+                height = 3 * SIZE_MULTIPLIER + Math.floor(Math.random() * 8) * SIZE_MULTIPLIER;
                 mRectangles.push(new Rectangle(0, 0, width, height));
             }
 
