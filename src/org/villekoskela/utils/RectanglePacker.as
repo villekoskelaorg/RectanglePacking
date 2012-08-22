@@ -263,7 +263,8 @@ package org.villekoskela.utils
                 if (free.x < best.x && width <= free.width && height <= free.height)
                 {
                     index = i;
-                    if (width == free.width || height == free.height)
+                    if ((width == free.width && free.width <= free.height) ||
+                        (height == free.height && free.height <= free.width))
                     {
                         break;
                     }
