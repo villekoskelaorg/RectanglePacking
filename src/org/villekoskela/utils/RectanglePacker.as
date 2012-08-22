@@ -1,5 +1,5 @@
 /**
- * Rectangle Packer v1.1.1
+ * Rectangle Packer v1.2.0
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -36,9 +36,11 @@ package org.villekoskela.utils
      */
     public class RectanglePacker
     {
-        public static const VERSION:String = "1.1.1";
+        public static const VERSION:String = "1.2.0";
         private var mWidth:int = 0;
         private var mHeight:int = 0;
+
+        private var mInsertList:Array = [];
 
         private var mInsertedRectangles:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
         private var mFreeAreas:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
@@ -46,6 +48,7 @@ package org.villekoskela.utils
 
         private var mOutsideRectangle:IntegerRectangle;
 
+        private var mSortableSizeStack:Vector.<SortableSize> = new Vector.<SortableSize>();
         private var mRectangleStack:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
 
         public function get rectangleCount():int { return mInsertedRectangles.length; }
@@ -81,6 +84,11 @@ package org.villekoskela.utils
             mWidth = width;
             mHeight = height;
             mFreeAreas[0] = allocateRectangle(0, 0, mWidth, mHeight);
+
+            while (mInsertList.length)
+            {
+                freeSize(mInsertList.pop());
+            }
         }
 
         /**
@@ -105,32 +113,69 @@ package org.villekoskela.utils
         }
 
         /**
-         * Tries to insert new rectangle into the packer
+         * Gets the original id for the inserted rectangle in given index
+         * @param index
+         * @return
+         */
+        public function getRectangleId(index:int):int
+        {
+            var inserted:IntegerRectangle = mInsertedRectangles[index];
+            return inserted.id;
+        }
+
+        /**
+         * Add a rectangle to be packed into the packer
          * @width the width of inserted rectangle
          * @height the height of inserted rectangle
+         * @id the identifier for this rectangle
          * @return true if inserted successfully
          */
-        public function insertRectangle(width:int, height:int):Boolean
+        public function insertRectangle(width:int, height:int, id:int):void
         {
-            var index:int = getFreeAreaIndex(width, height);
-            if (index < 0)
+            var sortableSize:SortableSize = allocateSize(width, height, id);
+            mInsertList.push(sortableSize);
+        }
+
+        /**
+         * Packs the rectangles inserted
+         * @param sort boolean defining whether to sort the inserted rectangles before packing
+         * @return the number of the packed rectangles
+         */
+        public function packRectangles(sort:Boolean = true):int
+        {
+            if (sort)
             {
-                return false;
+                mInsertList.sortOn("width", Array.NUMERIC);
             }
 
-            var freeArea:IntegerRectangle = mFreeAreas[index];
-            var target:IntegerRectangle = allocateRectangle(freeArea.x, freeArea.y, width, height);
-
-            // Generate the new free areas, these are parts of the old ones intersected or touched by the target
-            generateNewFreeAreas(target, mFreeAreas, mNewFreeAreas);
-
-            while (mNewFreeAreas.length > 0)
+            while (mInsertList.length > 0)
             {
-                mFreeAreas[mFreeAreas.length] = mNewFreeAreas.pop();
+                var sortableSize:SortableSize = mInsertList.pop() as SortableSize;
+                var width:int = sortableSize.width;
+                var height:int = sortableSize.height;
+
+                var index:int = getFreeAreaIndex(width, height);
+                if (index >= 0)
+                {
+                    var freeArea:IntegerRectangle = mFreeAreas[index];
+                    var target:IntegerRectangle = allocateRectangle(freeArea.x, freeArea.y, width, height);
+                    target.id = sortableSize.id;
+
+                    // Generate the new free areas, these are parts of the old ones intersected or touched by the target
+                    generateNewFreeAreas(target, mFreeAreas, mNewFreeAreas);
+
+                    while (mNewFreeAreas.length > 0)
+                    {
+                        mFreeAreas[mFreeAreas.length] = mNewFreeAreas.pop();
+                    }
+
+                    mInsertedRectangles[mInsertedRectangles.length] = target;
+                }
+
+                freeSize(sortableSize);
             }
 
-            mInsertedRectangles[mInsertedRectangles.length] = target;
-            return true;
+            return rectangleCount;
         }
 
         /**
@@ -308,6 +353,37 @@ package org.villekoskela.utils
         private function freeRectangle(rectangle:IntegerRectangle):void
         {
             mRectangleStack[mRectangleStack.length] = rectangle;
+        }
+
+        /**
+         * Allocates new sortable size instance. If one available in stack uses that, otherwise new.
+         * @param width
+         * @param height
+         * @param id
+         * @return
+         */
+        private function allocateSize(width:int, height:int, id:int):SortableSize
+        {
+            if (mSortableSizeStack.length > 0)
+            {
+                var size:SortableSize = mSortableSizeStack.pop();
+                size.width = width;
+                size.height = height;
+                size.id = id;
+
+                return size;
+            }
+
+            return new SortableSize(width, height, id);
+        }
+
+        /**
+         * Pushes the freed sortable size to size stack. Make sure not to push same size twice!
+         * @param size
+         */
+        private function freeSize(size:SortableSize):void
+        {
+            mSortableSizeStack[mSortableSizeStack.length] = size;
         }
     }
 }

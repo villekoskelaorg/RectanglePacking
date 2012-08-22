@@ -111,18 +111,6 @@ package org.villekoskela
                 height = 3 * SIZE_MULTIPLIER + Math.floor(Math.random() * 8) * SIZE_MULTIPLIER;
                 mRectangles.push(new Rectangle(0, 0, width, height));
             }
-
-            mRectangles.sort(sortOnArea);
-        }
-
-        private function sortOnArea(a:Rectangle, b:Rectangle):Number
-        {
-            if (a.width*a.height > b.width*b.height)
-            {
-                return -1;
-            }
-
-            return 1;
         }
 
         private function onAddedToStage(event:Event):void
@@ -143,7 +131,7 @@ package org.villekoskela
         private function updateRectangles():void
         {
             var start:int = getTimer();
-            var indexes:Vector.<int> = new Vector.<int>();
+
             if (mPacker == null)
             {
                 mPacker = new RectanglePacker(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight);
@@ -155,11 +143,11 @@ package org.villekoskela
 
             for (var i:int = 0; i < RECTANGLE_COUNT; i++)
             {
-                if (mPacker.insertRectangle(mRectangles[i].width, mRectangles[i].height))
-                {
-                    indexes.push(i);
-                }
+                mPacker.insertRectangle(mRectangles[i].width, mRectangles[i].height, i);
             }
+
+            mPacker.packRectangles();
+
             var end:int = getTimer();
 
             if (mPacker.rectangleCount > 0)
@@ -173,7 +161,7 @@ package org.villekoskela
                 {
                     rect = mPacker.getRectangle(j, rect);
                     mBitmapData.fillRect(new Rectangle(rect.x, rect.y, rect.width, rect.height), 0xFF000000);
-                    var index:int = indexes[j];
+                    var index:int = mPacker.getRectangleId(j);
                     var color:uint = 0xFF171703 + (((18 * ((index + 4) % 13)) << 16) + ((31 * ((index * 3) % 8)) << 8) + 63 * (((index + 1) * 3) % 5));
                     mBitmapData.fillRect(new Rectangle(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2), color);
                 }

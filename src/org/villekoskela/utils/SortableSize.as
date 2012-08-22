@@ -1,5 +1,5 @@
 /**
- * Integer rectangle
+ * Sortable size
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -28,27 +28,19 @@
 package org.villekoskela.utils
 {
     /**
-     * Class used to store rectangles values inside rectangle packer
-     * ID parameter needed to connect rectangle with the originally inserted rectangle
+     * Class used for sorting the inserted rectangles based on the dimensions
      */
-    public class IntegerRectangle
+    public class SortableSize
     {
-        public var x:int;
-        public var y:int;
         public var width:int;
         public var height:int;
-        public var right:int;
-        public var bottom:int;
         public var id:int;
 
-        public function IntegerRectangle(x:int = 0, y:int = 0, width:int = 0, height:int = 0)
+        public function SortableSize(width:int, height:int, id:int)
         {
-            this.x = x;
-            this.y = y;
             this.width = width;
             this.height = height;
-            this.right = x + width;
-            this.bottom = y + height;
+            this.id = id;
         }
     }
 }
