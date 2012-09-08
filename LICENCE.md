@@ -1,5 +1,6 @@
 Copyright 2012 Ville Koskela. All rights reserved.
 
+Email: ville@villekoskela.org
 Blog: http://villekoskela.org
 Twitter: @villekoskelaorg
 
@@ -8,6 +9,9 @@ but this copyright statement must not be removed from the source files.
 
 The package structure of the source code must remain unchanged.
 Mentioning the author in the binary distributions is highly appreciated.
+
+If you use this utility it would be nice to hear about it so feel free to drop
+an email.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
