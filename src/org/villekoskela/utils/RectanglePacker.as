@@ -100,7 +100,7 @@ package org.villekoskela.utils
          * @param rectangle an instance where to set the rectangle's values
          * @return
          */
-        public function getRectangle(index:int, rectangle:Rectangle):Rectangle
+        public function getRectangle(index:int, rectangle:Rectangle = null):Rectangle
         {
             var inserted:IntegerRectangle = mInsertedRectangles[index];
             if (rectangle)
