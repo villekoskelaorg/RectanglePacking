@@ -175,28 +175,28 @@ package org.villekoskela.utils
                     mInsertedRectangles[mInsertedRectangles.length] = target;
                 }
 
-                mHeight = 0;
-                mWidth = 0;
-                
-                var length:int = mInsertedRectangles.length;
-                var rect:IntegerRectangle;
-                
-                for (var i:int = 0; i < length; i++)
-                {
-                	rect = mInsertedRectangles[i];
-                	
-                	if (rect.y + rect.height > mHeight)
-                	{
-                		mHeight = rect.y + rect.height;
-                	}
-                	
-                	if (rect.x + rect.width > mWidth)
-                	{
-                		mWidth = rect.x + rect.width;
-                	}
-                }
-
                 freeSize(sortableSize);
+            }
+
+            mHeight = 0;
+            mWidth = 0;
+            
+            var length:int = mInsertedRectangles.length;
+            var rect:IntegerRectangle;
+            
+            for (var i:int = 0; i < length; i++)
+            {
+                rect = mInsertedRectangles[i];
+            	
+            	if (rect.y + rect.height > mHeight)
+            	{
+            		mHeight = rect.y + rect.height;
+            	}
+            	
+            	if (rect.x + rect.width > mWidth)
+            	{
+            		mWidth = rect.x + rect.width;
+            	}
             }
 
             return rectangleCount;
