@@ -54,7 +54,9 @@ package org.villekoskela.utils
         private var mSortableSizeStack:Vector.<SortableSize> = new Vector.<SortableSize>();
         private var mRectangleStack:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
 
+        public function get height():int { return mHeight; }
         public function get rectangleCount():int { return mInsertedRectangles.length; }
+        public function get width():int { return mWidth; }
 
         /**
          * Constructs new rectangle packer
@@ -200,16 +202,6 @@ package org.villekoskela.utils
             }
 
             return rectangleCount;
-        }
-
-        public function get height():int
-        {
-        	return mHeight;
-        }
-        
-        public function get width():int
-        {
-        	return mWidth;
         }
 
         /**
