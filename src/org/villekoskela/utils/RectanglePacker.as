@@ -61,7 +61,7 @@ package org.villekoskela.utils
          * @param width the width of the main rectangle
          * @param height the height of the main rectangle
          */
-        public function RectanglePacker(width:int, height:int)
+        public function RectanglePacker(width:int = 2048, height:int = 2048)
         {
             mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
             reset(width, height);
@@ -175,10 +175,41 @@ package org.villekoskela.utils
                     mInsertedRectangles[mInsertedRectangles.length] = target;
                 }
 
+                mHeight = 0;
+                mWidth = 0;
+                
+                var length:int = mInsertedRectangles.length;
+                var rect:IntegerRectangle;
+                
+                for (var i:int = 0; i < length; i++)
+                {
+                	rect = mInsertedRectangles[i];
+                	
+                	if (rect.y + rect.height > mHeight)
+                	{
+                		mHeight = rect.y + rect.height;
+                	}
+                	
+                	if (rect.x + rect.width > mWidth)
+                	{
+                		mWidth = rect.x + rect.width;
+                	}
+                }
+
                 freeSize(sortableSize);
             }
 
             return rectangleCount;
+        }
+
+        public function get height():int
+        {
+        	return mHeight;
+        }
+        
+        public function get width():int
+        {
+        	return mWidth;
         }
 
         /**
