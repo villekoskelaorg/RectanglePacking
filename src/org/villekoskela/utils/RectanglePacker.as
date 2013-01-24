@@ -54,14 +54,16 @@ package org.villekoskela.utils
         private var mSortableSizeStack:Vector.<SortableSize> = new Vector.<SortableSize>();
         private var mRectangleStack:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
 
+        public function get height():int { return mHeight; }
         public function get rectangleCount():int { return mInsertedRectangles.length; }
+        public function get width():int { return mWidth; }
 
         /**
          * Constructs new rectangle packer
          * @param width the width of the main rectangle
          * @param height the height of the main rectangle
          */
-        public function RectanglePacker(width:int, height:int)
+        public function RectanglePacker(width:int = 2048, height:int = 2048)
         {
             mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
             reset(width, height);
@@ -100,7 +102,7 @@ package org.villekoskela.utils
          * @param rectangle an instance where to set the rectangle's values
          * @return
          */
-        public function getRectangle(index:int, rectangle:Rectangle):Rectangle
+        public function getRectangle(index:int, rectangle:Rectangle = null):Rectangle
         {
             var inserted:IntegerRectangle = mInsertedRectangles[index];
             if (rectangle)
@@ -176,6 +178,27 @@ package org.villekoskela.utils
                 }
 
                 freeSize(sortableSize);
+            }
+
+            mHeight = 0;
+            mWidth = 0;
+            
+            var length:int = mInsertedRectangles.length;
+            var rect:IntegerRectangle;
+            
+            for (var i:int = 0; i < length; i++)
+            {
+                rect = mInsertedRectangles[i];
+            	
+            	if (rect.y + rect.height > mHeight)
+            	{
+            		mHeight = rect.y + rect.height;
+            	}
+            	
+            	if (rect.x + rect.width > mWidth)
+            	{
+            		mWidth = rect.x + rect.width;
+            	}
             }
 
             return rectangleCount;
