@@ -1,5 +1,5 @@
 /**
- * Rectangle Packer v1.2.0
+ * Rectangle Packer v1.2.1
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -63,7 +63,6 @@ package org.villekoskela.utils
          */
         public function RectanglePacker(width:int, height:int)
         {
-            mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
             reset(width, height);
         }
 
@@ -74,6 +73,8 @@ package org.villekoskela.utils
          */
         public function reset(width:int, height:int):void
         {
+            mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
+
             while (mInsertedRectangles.length)
             {
                 freeRectangle(mInsertedRectangles.pop());
@@ -214,7 +215,7 @@ package org.villekoskela.utils
 
         /**
          * Checks what areas the given rectangle intersects, removes those areas and
-         * returns the list of new areas those areas are divived into
+         * returns the list of new areas those areas are divided into
          * @param target the new rectangle that is dividing the areas
          * @param areas the areas to be divided
          * @return list of new areas
