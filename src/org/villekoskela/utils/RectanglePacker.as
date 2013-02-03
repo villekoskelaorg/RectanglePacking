@@ -39,7 +39,7 @@ package org.villekoskela.utils
      */
     public class RectanglePacker
     {
-        public static const VERSION:String = "1.2.0";
+        public static const VERSION:String = "1.2.1";
         private var mWidth:int = 0;
         private var mHeight:int = 0;
 
