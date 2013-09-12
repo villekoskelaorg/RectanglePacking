@@ -134,14 +134,15 @@ package org.villekoskela
         private function updateRectangles():void
         {
             var start:int = getTimer();
+			const padding:int = 1;
 
             if (mPacker == null)
             {
-                mPacker = new RectanglePacker(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight);
+                mPacker = new RectanglePacker(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight, padding);
             }
             else
             {
-                mPacker.reset(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight)
+                mPacker.reset(mScalingBox.newBoxWidth, mScalingBox.newBoxHeight, padding);
             }
 
             for (var i:int = 0; i < RECTANGLE_COUNT; i++)
