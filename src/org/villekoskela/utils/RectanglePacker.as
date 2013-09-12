@@ -1,5 +1,5 @@
 /**
- * Rectangle Packer v1.2.1
+ * Rectangle Packer v1.3.0
  *
  * Copyright 2012 Ville Koskela. All rights reserved.
  *
@@ -33,15 +33,18 @@ package org.villekoskela.utils
     import flash.geom.Rectangle;
 
     /**
-     * Class used to pack rectangles within containers rectangle with close to optimal solution.
-     * To keep the implementation simple no instance pooling or any other advanced techniques
-     * are used.
+     * Class used to pack rectangles within container rectangle with close to optimal solution.
      */
     public class RectanglePacker
     {
-        public static const VERSION:String = "1.2.1";
+        public static const VERSION:String = "1.3.0";
+
         private var mWidth:int = 0;
         private var mHeight:int = 0;
+        private var mPadding:int = 8;
+
+        private var mPackedWidth:int = 0;
+        private var mPackedHeight:int = 0;
 
         private var mInsertList:Array = [];
 
@@ -56,14 +59,20 @@ package org.villekoskela.utils
 
         public function get rectangleCount():int { return mInsertedRectangles.length; }
 
+        public function get packedWidth():int { return mPackedWidth; }
+        public function get packedHeight():int { return mPackedHeight; }
+
+        public function get padding():int { return mPadding; }
+
         /**
          * Constructs new rectangle packer
          * @param width the width of the main rectangle
          * @param height the height of the main rectangle
          */
-        public function RectanglePacker(width:int, height:int)
+        public function RectanglePacker(width:int, height:int, padding:int = 0)
         {
-            reset(width, height);
+            mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
+            reset(width, height, padding);
         }
 
         /**
@@ -71,10 +80,8 @@ package org.villekoskela.utils
          * @param width
          * @param height
          */
-        public function reset(width:int, height:int):void
+        public function reset(width:int, height:int, padding:int = 0):void
         {
-            mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
-
             while (mInsertedRectangles.length)
             {
                 freeRectangle(mInsertedRectangles.pop());
@@ -87,12 +94,18 @@ package org.villekoskela.utils
 
             mWidth = width;
             mHeight = height;
+
+            mPackedWidth = 0;
+            mPackedHeight = 0;
+
             mFreeAreas[0] = allocateRectangle(0, 0, mWidth, mHeight);
 
             while (mInsertList.length)
             {
                 freeSize(mInsertList.pop());
             }
+
+            mPadding = padding;
         }
 
         /**
@@ -174,6 +187,14 @@ package org.villekoskela.utils
                     }
 
                     mInsertedRectangles[mInsertedRectangles.length] = target;
+                    if (target.right > mPackedWidth)
+                    {
+                        mPackedWidth = target.right;
+                    }
+                    if (target.bottom > mPackedHeight)
+                    {
+                        mPackedHeight = target.bottom;
+                    }
                 }
 
                 freeSize(sortableSize);
@@ -223,24 +244,41 @@ package org.villekoskela.utils
         private function generateNewFreeAreas(target:IntegerRectangle, areas:Vector.<IntegerRectangle>, results:Vector.<IntegerRectangle>):void
         {
             // Increase dimensions by one to get the areas on right / bottom this rectangle touches
+            // Also add the padding here
             const x:int = target.x;
             const y:int = target.y;
-            const right:int = target.right + 1;
-            const bottom:int = target.bottom + 1;
+            const right:int = target.right + 1 + mPadding;
+            const bottom:int = target.bottom + 1 + mPadding;
+
+            var targetWithPadding:IntegerRectangle = null;
+            if (mPadding == 0)
+            {
+                targetWithPadding = target;
+            }
 
             for (var i:int = areas.length - 1; i >= 0; i--)
             {
                 const area:IntegerRectangle = areas[i];
                 if (!(x >= area.right || right <= area.x || y >= area.bottom || bottom <= area.y))
                 {
-                    generateDividedAreas(target, area, results);
+                    if (!targetWithPadding)
+                    {
+                        targetWithPadding = allocateRectangle(target.x, target.y, target.width + mPadding, target.height + mPadding);
+                    }
+
+                    generateDividedAreas(targetWithPadding, area, results);
                     var topOfStack:IntegerRectangle = areas.pop();
-                    if (i <areas.length)
+                    if (i < areas.length)
                     {
                         // Move the one on the top to the freed position
                         areas[i] = topOfStack;
                     }
                 }
+            }
+
+            if (targetWithPadding && targetWithPadding != target)
+            {
+                freeRectangle(targetWithPadding);
             }
 
             filterSelfSubAreas(results);
@@ -305,19 +343,40 @@ package org.villekoskela.utils
             var best:IntegerRectangle = mOutsideRectangle;
             var index:int = -1;
 
+            const paddedWidth:int = width + mPadding;
+            const paddedHeight:int = height + mPadding;
+
             const count:int = mFreeAreas.length;
             for (var i:int = count - 1; i >= 0; i--)
             {
                 const free:IntegerRectangle = mFreeAreas[i];
-                if (free.x < best.x && width <= free.width && height <= free.height)
+                if (free.x < mPackedWidth || free.y < mPackedHeight)
                 {
-                    index = i;
-                    if ((width == free.width && free.width <= free.height && free.right < mWidth) ||
-                        (height == free.height && free.height <= free.width))
+                    // Within the packed area, padding required
+                    if (free.x < best.x && paddedWidth <= free.width && paddedHeight <= free.height)
                     {
-                        break;
+                        index = i;
+                        if ((paddedWidth == free.width && free.width <= free.height && free.right < mWidth) ||
+                                (paddedHeight == free.height && free.height <= free.width))
+                        {
+                            break;
+                        }
+                        best = free;
                     }
-                    best = free;
+                }
+                else
+                {
+                    // Outside the current packed area, no padding required
+                    if (free.x < best.x && width <= free.width && height <= free.height)
+                    {
+                        index = i;
+                        if ((width == free.width && free.width <= free.height && free.right < mWidth) ||
+                                (height == free.height && free.height <= free.width))
+                        {
+                            break;
+                        }
+                        best = free;
+                    }
                 }
             }
 
