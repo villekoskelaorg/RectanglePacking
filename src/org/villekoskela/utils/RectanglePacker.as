@@ -52,7 +52,7 @@ package org.villekoskela.utils
         private var mFreeAreas:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
         private var mNewFreeAreas:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
 
-        private var mOutsideRectangle:IntegerRectangle;
+        private var mOutsideRectangle:IntegerRectangle = new IntegerRectangle();
 
         private var mSortableSizeStack:Vector.<SortableSize> = new Vector.<SortableSize>();
         private var mRectangleStack:Vector.<IntegerRectangle> = new Vector.<IntegerRectangle>();
@@ -71,7 +71,6 @@ package org.villekoskela.utils
          */
         public function RectanglePacker(width:int, height:int, padding:int = 0)
         {
-            mOutsideRectangle = new IntegerRectangle(width + 1, height + 1, 0, 0);
             reset(width, height, padding);
         }
 
@@ -82,6 +81,10 @@ package org.villekoskela.utils
          */
         public function reset(width:int, height:int, padding:int = 0):void
         {
+            mOutsideRectangle.x = width + 1;
+            mOutsideRectangle.y = height + 1;
+            mOutsideRectangle.width = mOutsideRectangle.height = 0;
+
             while (mInsertedRectangles.length)
             {
                 freeRectangle(mInsertedRectangles.pop());
